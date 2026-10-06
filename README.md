@@ -17,32 +17,7 @@ The usefulness of a PLM varies across tasks and proteins. STAIR learns source co
 3. **Instance-adaptive routing:** construct a global query from all adapted features, compare it with each source key, and obtain softmax routing weights. Retain the top-k sources, renormalize their weights, and aggregate their predictions. Training uses a straight-through estimator for routing gradients.
 4. **Representation transfer:** construct a source-proxy view with a factorized projector. Label-weighted JMMD aligns this view with adapted features, while a negative HSIC term encourages statistical dependence between adapted features and labels.
 
-```mermaid
-flowchart LR
-    E["Six precomputed PLM embeddings"] --> A["Normalization and source adapters"]
-    A --> H["Cross-expert semantic reassembly"]
-    A --> R["Instance-level top-k routing"]
-    H --> Y["Weighted prediction"]
-    R --> Y
-    E --> P["Source-proxy projection"]
-    A --> L["JMMD and HSIC transfer loss"]
-    P --> L
-    R --> L
-```
 
-The training objective is:
-
-```text
-L = L_task + l_exploit × L_exploit + l_transfer × L_transfer
-L_transfer = Σ_i β̄_i × (lambda_jmmd × JMMD_i − lambda_disc × HSIC_i)
-```
-
-- `L_task`: mean squared error (MSE) for regression or cross-entropy for classification.
-- `L_exploit`: auxiliary supervision of the selected sources' native predictions, averaged over selected sample–source pairs.
-- `β̄_i`: in this implementation, the batch mean of a source's **dense softmax routing weights**, detached from the gradient computation.
-- `lambda_jmmd`: defaults to `1.0` in the code; `lambda_disc` and the other loss coefficients are specified in the task configuration.
-
-“Frozen” refers to the upstream PLMs, which are not updated during downstream training. The adapters, prediction heads, BatchNorm, proxy projectors, and routing matrices are trainable.
 
 ## Project Structure
 
@@ -88,7 +63,6 @@ Sample counts below come from the label TSV files in this package. Each test spl
 | `meltome` | Protein melting temperature prediction | Regression / Spearman ρ | 22,335 | 2,482 | 3,134 |
 | `stability` | Protein stability prediction | Regression / Spearman ρ | 53,614 | 2,512 | 12,851 |
 
-**Location uses `location/location_hard.tsv` as its default test split.** The package also includes `location_test.tsv` with 2,768 samples, which is not used by default. To switch splits before training, edit `directories.test` in `configs/location.yaml`. Inference uses the configuration saved in the checkpoint.
 
 ## Installation
 
@@ -101,35 +75,8 @@ scipy==1.15.3
 PyYAML==6.0.3
 ```
 
-Windows PowerShell example, calling the virtual environment's Python directly without activating it:
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe src/train.py --help
-```
 
-The commands below use this Windows virtual environment path. On Linux or macOS, replace `.\.venv\Scripts\python.exe` with `python` from the appropriate environment or `.venv/bin/python`.
-
-The default device is CPU. To use a GPU, ensure your PyTorch installation supports CUDA and `torch.cuda.is_available()` returns true, then pass `--device cuda:0`.
-
-## Data and Embedding Preparation
-
-### Label Files
-
-The training entry point reads TSV files with exactly two tab-separated columns per line, **without a header or blank lines**:
-
-```text
-protein_key<TAB>target
-```
-
-Regression labels are parsed as floating-point values. Location labels are integers from `0` to `9`. The first column is the embedding lookup key and must be preserved exactly:
-
-- AAV, GB1, and Meltome use identifiers such as `Sequence0`.
-- Location uses accessions such as `Q5I0E9`.
-- GFP and Stability use the complete amino acid sequence as the key.
-
-Each task's `*_sequences.tsv` provides a `key<TAB>sequence` mapping for preparing embeddings externally. The current entry point reads only the label TSV files specified in the configuration; it does not directly read sequence mappings or raw CSV, JSON, or FASTA files.
 
 ### Embedding Sources and Dimensions
 
@@ -163,25 +110,10 @@ embeddings/
     └── proteindt/protein_dictionary.pt
 ```
 
-Each `.pt` file stores a `dict[str, torch.Tensor]`. Keys match the first column of the label TSV, and each value is a one-dimensional protein embedding of shape `(source_dim,)`. The loader checks key coverage and dimensions, then converts the embeddings to floating-point tensors.
 
-The following example illustrates the ESM3 file format only. Zero vectors cannot reproduce the paper's results:
-
-```python
-import torch
-
-protein_dictionary = {"Sequence0": torch.zeros(1536, dtype=torch.float32)}
-torch.save(protein_dictionary, "protein_dictionary.pt")
-```
-
-Replace the example values with real embeddings extracted from the corresponding PLM and include every required protein. Training requires embeddings for the train, validation, and test splits; inference requires embeddings for the configured test split. **All six source files are required even when `--topk 1` is used.**
-
-This package does not specify PLM version selection, pooling, or feature extraction procedures. Reproducing the experiments requires upstream embeddings consistent with those used in the paper.
 
 ## Training
 
-After preparing all six files under `embeddings/aav/`, run the following command from the project root:
-
-```powershell
-.\.venv\Scripts\python.exe src/train.py --mode train --dataset aav --embeddings-dir embeddings --device cpu --seed 42
+```text
+python train.py --mode train --dataset aav --embeddings-dir embeddings --device cpu --seed 42
 ```
