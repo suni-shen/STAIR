@@ -47,6 +47,7 @@ STAIR_minimal/
     ├── cath/             # Extension data; no experiment entry point in this package
     └── ppi/              # Extension data; no experiment entry point in this package
 ```
+The dataset file can be downloaded from this link: https://drive.google.com/file/d/12PFGKyjnbiZf56A_DjSSXKqAcR4pjI_6/view?usp=sharing
 
 Prepare `embeddings/` separately. The program creates `outputs/` when it runs.
 
