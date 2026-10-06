@@ -1,4 +1,4 @@
-# STAIR Minimal
+# STAIR 
 
 Instance-adaptive fusion and transfer learning with frozen protein language model (PLM) embeddings.
 
