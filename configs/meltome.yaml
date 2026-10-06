@@ -1,0 +1,16 @@
+hidden_dimension: 128
+training:
+  batch_size: 4096
+  iteration: 120
+  lr_gate: 0.001
+  lr_expert: 0.002
+  l_exploit: 1
+  l_transfer: 5
+  transfer_cfg:
+    sigma_x: auto
+    sigma_y: auto
+    lambda_disc: 10
+directories:
+  train: meltome/meltome_train.tsv
+  validation: meltome/meltome_val.tsv
+  test: meltome/meltome_test.tsv

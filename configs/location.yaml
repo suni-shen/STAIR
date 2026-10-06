@@ -1,0 +1,16 @@
+hidden_dimension: 64
+training:
+  batch_size: 4096
+  iteration: 200
+  lr_gate: 0.001
+  lr_expert: 0.002
+  l_exploit: 1
+  l_transfer: 5
+  transfer_cfg:
+    sigma_x: auto
+    sigma_y: auto
+    lambda_disc: 10
+directories:
+  train: location/location_train.tsv
+  validation: location/location_val.tsv
+  test: location/location_hard.tsv
