@@ -44,8 +44,8 @@ STAIR_minimal/
     ├── location/
     ├── meltome/
     ├── stability/
-    ├── cath/             # Extension data; no experiment entry point in this package
-    └── ppi/              # Extension data; no experiment entry point in this package
+    ├── cath/             # Extension data; 
+    └── ppi/              # Extension data;  
 ```
 The dataset file can be downloaded from this link: https://drive.google.com/file/d/12PFGKyjnbiZf56A_DjSSXKqAcR4pjI_6/view?usp=sharing
 
