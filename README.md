@@ -2,15 +2,15 @@
 
 Instance-adaptive fusion and transfer learning with frozen protein language model (PLM) embeddings.
 
-This project provides a minimal implementation of STAIR for training and evaluation. It maps precomputed embeddings from six PLMs into a shared task space, combines predictions through cross-expert semantic reassembly and instance-level routing, and regularizes representation adaptation with a JMMD–HSIC objective. It supports five protein property regression tasks and one subcellular localization classification task.
+This project provides an implementation of STAIR for training and evaluation. It maps precomputed embeddings from six PLMs into a shared task space, combines predictions through cross-expert semantic reassembly and instance-level routing, and regularizes representation adaptation with a JMMD–HSIC objective. It supports five protein property regression tasks and one subcellular localization classification task.
 
-Associated paper: **STAIR: Selective Protein Language Model Embedding Fusion via Adaptive Routing**, by Lian Shen, Muyuan Yu, and Xiangrong Liu. The title follows the first page of the supplied manuscript.
+Associated paper: **STAIR: Selective Protein Language Model Embedding Fusion via Adaptive Routing**
 
 **Before running: prepare precomputed embeddings from all six PLMs. This package includes datasets, configurations, and downstream model code, but does not include embeddings, PLM weights, embedding extraction scripts, or trained STAIR checkpoints.**
 
 ## Method Overview
 
-The usefulness of a PLM varies across tasks and proteins. STAIR learns source contributions for each protein instead of selecting one fixed embedding combination for an entire task.
+A PLM's usefulness varies across tasks and proteins. STAIR learns source contributions for each protein instead of selecting one fixed embedding combination for an entire task.
 
 1. **Source-specific adaptation:** apply BatchNorm to the concatenated embeddings, split them by source, and map each source into a shared hidden space using a `Linear → LayerNorm → ReLU` adapter.
 2. **Cross-expert semantic reassembly:** apply all prediction heads to each adapted source feature and combine their predictions according to cosine similarity between the source feature and the heads' hidden representations. During the first `floor(epochs / 10)` training epochs, each source uses only its own prediction head. Validation and inference always use full reassembly.
